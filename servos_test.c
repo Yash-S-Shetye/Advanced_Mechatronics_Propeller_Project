@@ -4,7 +4,7 @@
 #include "servo.h" // Include servo library
 int main() // Main function
 {
-  while(1) {
+  while(1) // loop infinitely {
     
     // Forward motion
     servo_speed(2, 100);
