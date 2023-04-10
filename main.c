@@ -6,11 +6,13 @@
 
 int white = 0;
 int black = 1;
-
-serial *lcd;
-
 const int ON  = 22;
 const int CLR = 12;
+int led = ;
+int ob_distance = 20;
+int c_intersection = 0;
+
+serial *lcd;
 
 //Creating a robot class containing all the functions that will be used
 class Robot {
@@ -82,6 +84,17 @@ bool Robot::linefollowing(){
   }
 }
 
+bool Robot::isobstacle() {
+  long duration;
+  int distance = ping_cm(11);
+  
+  
+  if (distance<obsdistance){
+    return true;}
+  else{
+    return false;}
+}
+
 //Defining lcd display function
 void Robot::lcd_display(char disp) {
   writeChar(lcd, CLR);
@@ -109,6 +122,22 @@ int main()                                    // Main function
  
   while(1)
   {
+    if(!finish){  //gloabal check flag, will set to be true when finish parking
+
+    //1st step: follow the line and enter the intersection
+    localfinish=false;
+    while(!localfinish){
+      if(!rob.linefollowing()){     //if meet intersection
+        rob.lcd_display('i');
+        rob.drive('f');delay(500); 
+        rob.drive('r');delay(2000); //turn right
+        c_intersection++; //record  the intersections have been passed
+        localfinish=true;
+        bool isobj=rob.isobstacle()
+        if(isobj==true) {
+          high(led);delay(1000);low(led);delay(1000);rob.drive('s');delay(2000);
+      }
+    }
     
     
   }  
