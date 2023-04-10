@@ -8,7 +8,7 @@ int white = 0;
 int black = 1;
 const int ON  = 22;
 const int CLR = 12;
-int led = ;
+const int led = 7;
 int ob_distance = 20;
 int c_intersection = 0;
 
