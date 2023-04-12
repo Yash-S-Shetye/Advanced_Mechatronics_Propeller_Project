@@ -8,9 +8,8 @@ int white = 0;
 int black = 1;
 const int ON  = 22;
 const int CLR = 12;
-const int led = 7;
-int ob_distance = 20;
-int c_intersection = 0;
+int c_intersection=0;
+int ob_distance=20;
 
 serial *lcd;
 
@@ -95,6 +94,7 @@ bool Robot::isobstacle() {
     return false;}
 }
 
+
 //Defining lcd display function
 void Robot::lcd_display(char disp) {
   writeChar(lcd, CLR);
@@ -133,12 +133,32 @@ int main()                                    // Main function
         rob.drive('r');delay(2000); //turn right
         c_intersection++; //record  the intersections have been passed
         localfinish=true;
-        bool isobj=rob.isobstacle()
-        if(isobj==true) {
-          high(led);delay(1000);low(led);delay(1000);rob.drive('s');delay(2000);
+        
       }
     }
     
-    
-  }  
+  }
+  
+  localfinish=false;
+  int c_itsc=0;
+  bool isintersection=false;
+  while(!localfinish){
+    //move the robot
+    isintersection=!rob.linefollowing();
+    bool isobj=rob.isobstacle()
+    if(isintersection && c_itsc==0 && isobj==true) { //if meet intersection
+      high(led);delay(1000);low(led);delay(1000);rob.drive('s');delay(2000);
+    }
+    else if(isintersection && c_itsc==0 && isobj==false){
+        rob.drive('f');delay(500); 
+        rob.drive('r');delay(oneeighty); //turn 180
+        c_itsc++;
+    }
+    else if(isintersection && c_itsc==1) {
+      rob.drive('f');delay(500);
+      rob.drive('r');delay(1000);//Turn right
+      c_itsc++;
+      localfinish=true;
+    }  
 }
+
