@@ -4,46 +4,46 @@
 #include "servo.h" // Include servo library
 int main() // Main function
 {
-  while(1) // loop infinitely {
+  while(1) {
     
     // Forward motion
-    servo_speed(2, 100);
-    servo_speed(3, -100); 
-    pause(2000);
+    servo_speed(16, 50);
+    servo_speed(17, -50); 
+    pause(1000);
     
     // Stop 
-    servo_speed(2, 0);
-    servo_speed(3, 0); 
-    pause(2000);
+    servo_speed(16, 0);
+    servo_speed(17, 0); 
+    pause(1000);
     
     // Left
-    servo_speed(2, 100);
-    servo_speed(3, 100); 
-    pause(2000);
+    servo_speed(16, -50);
+    servo_speed(17, -50); 
+    pause(1000);
     
     // Stop
-    servo_speed(2, 0);
-    servo_speed(3, 0); 
-    pause(2000);
+    servo_speed(16, 0);
+    servo_speed(17, 0); 
+    pause(1000);
     
     // Right
-    servo_speed(2, -100);
-    servo_speed(3, -100); 
-    pause(2000);
+    servo_speed(16, 50);
+    servo_speed(17, 50); 
+    pause(1000);
     
     // Stop
-    servo_speed(2, 0);
-    servo_speed(3, 0); 
-    pause(2000);
+    servo_speed(16, 0);
+    servo_speed(17, 0); 
+    pause(1000);
     
     // Backward
-    servo_speed(2, -100);
-    servo_speed(3, 100); 
-    pause(2000);
+    servo_speed(16, -50);
+    servo_speed(17, 50); 
+    pause(1000);
     
     // Stop
-    servo_spin(2, 0);
-    servo_spin(3, 0); 
-    pause(2000);
+    servo_speed(16, 0);
+    servo_speed(17, 0); 
+    pause(1000);
   }
-}      
+}    
