@@ -164,7 +164,12 @@ int main()                                    // Main function
           //rob.drive('r');delay(1000);//Turn right
           c_itsc++;
           localfinish=true;
-        }*/  
+        }*/
+
+        while(isobstacle() == true) {
+          drive('s');
+        }
+                  
         if(isintersection && c_itsc==0) { //if meet intersection
           drive('f');pause(500); 
           drive('r');pause(1000); //turn 90
@@ -199,6 +204,11 @@ int main()                                    // Main function
     bool isintersection=false;
     while(!localfinish) {
       isintersection=!linefollowing();
+      
+      while(isobstacle() == true) {
+          drive('s');
+      }
+      
       if(isintersection && c_p==0) {
         drive('f');pause(500);
         drive('r');pause(1000);
@@ -224,5 +234,6 @@ int main()                                    // Main function
     //}
   }             
 }
+
 
 
