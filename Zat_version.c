@@ -3,7 +3,7 @@
 #include "simpletools.h"                      // Include simple tools
 #include "servo.h"                            // Include servo library
 #include "ping.h"  
-#include "stdbool.h"                           // Include ping sensor library
+#include "stdbool.h"                           
 
 int white = 0;
 int black = 1;
@@ -17,8 +17,8 @@ int ob_distance=20;
 int pd_distance;
 
 static volatile int distance;
-static volatile int trigPin = 1;
-static volatile int echoPin = 2;
+const int trigPin = 1;
+const int echoPin = 2;
 static volatile long duration;
 static volatile int distance2;
 static volatile int led;
@@ -60,7 +60,7 @@ void init() {
   writeChar(lcd, CLR);
   pause(5);
   dprint(lcd, "Initialized!!");
-  pause(2000);
+  pause(1000);
   writeChar(lcd, CLR);
 }  
 
@@ -104,6 +104,26 @@ bool linefollowing(){
   }
 }
 
+void obstacle(void *dist) {
+  while(1) {
+    distance = ping_cm(ultrasonic); // Get cm distance from Ping)))
+    pause(200); // Wait 1/5 second
+   }
+}
+
+void object(void *dist2) {
+  while(1) {
+    low(trigPin);
+    pause(2);
+    high(trigPin);
+    pause(10);
+    low(trigPin);
+    duration = pulse_in(echoPin, 1);
+    distance2 = duration * 0.034/2;
+    pause(200);
+  }
+}
+
 // function for blinking led
 void led_blink(void *ledPin) {
   while(1) {
@@ -115,18 +135,6 @@ void led_blink(void *ledPin) {
       ledflag=false;
     } 
   }
-}
-
-// Function for getting distance from object to be picked up
-void object(void *dist2) {
-  low(trigPin);
-  pause(2);
-  high(trigPin);
-  pause(10);
-  low(trigPin);
-  duration = pulse_in(echoPin, 1);
-  distance2 = duration * 0.034/2;
-  pause(200);
 }
 
 // Function for checking for object to be picked up
@@ -147,31 +155,24 @@ bool isobstacle() {
 
 //Defining lcd display function
 void lcd_display(char disp) {
-    writeChar(lcd, ON);
-    writeChar(lcd, CLR);
-    pause(5);
     switch(disp) {
       case 'o':dprint(lcd, "Object Detected");  // i - Intersection detected
                pause(1000);
+               writeChar(lcd, CLR);
                break;
       case 'e':dprint(lcd, "Object Placed");
                pause(1000);
-              writeChar(lcd, CRT);
-              dprint(lcd, "Distance=%d cm",pd_distance);
+               writeChar(lcd, CLR);
+               dprint(lcd, "Distance=%d cm",pd_distance);
+               break;
+      default:dprint(lcd, "Error");
+              writeChar(lcd, CLR);
               break;
-      default:print("Unclear command for display");break;
-    }         
+    }       
 }
 
 //for test purpose
 void test(){
-}
-
-void obstacle(void *dist) {
-  while(1) {
-    distance = ping_cm(ultrasonic); // Get cm distance from Ping)))
-    pause(200); // Wait 1/5 second
-   }
 }
 
 void avoid_obstacle(){
@@ -205,6 +206,7 @@ void avoid_obstacle(){
       if(c_intersection==5) {
         drive('f');pause(1000);
         ob_flag=true;
+        localfinish=true;
       }
       else {        
         drive('f');pause(500);
@@ -242,11 +244,16 @@ int main()
         avoid_obstacle();
       }
       else { 
-        drive('f');pause(1000); // Move straight
-        if(c_intersection==4) 
+        if(c_intersection==5) {
+          drive('f');pause(500);
+          drive('r');pause(1000);
           localfinish=true;
         }
-      }       
+        else{
+          drive('f');pause(1000); // Move straight
+        }
+      }
+    }            
   }
 
   // 2 go through pick up course
@@ -262,37 +269,64 @@ int main()
     low(led2);      
     if(isintersection && c_p==0) {
       ledflag=true;
+      if(isobject()==true){
+        pause(1000);
+        lcd_display('o');
+        drive('f');pause(1000);
+        pickup=5;
+      }
+      else{
       drive('f');pause(500);
       drive('r');pause(1000);
+      }      
       c_p++;
+      slowdownflag=true;
     }
-    else if(isintersection && c_p==1) {
+    /*else if(isintersection && c_p==1) {
       ledflag=true;
-      if(isobstacle()==true){lcd_display('o');pause(1000);}
-        //pickup=5;
+      if(isobstacle()==true){
+        pause(1000);
+        lcd_display('o');
+        drive('f');pause(1000);
+      }
+      else {
       drive('f');pause(500);
       drive('r');pause(1000);
       c_p++;
       slowdownflag=true;
     }
-    else if(isintersection && c_p>1 && c_p<5) {
+  }*/   
+    else if(isintersection && c_p>=1 && c_p<4) {
       ledflag=true;
-      if(isobject()==true) {lcd_display('o');pause(2000);}
-        //pickup=6-c_p;
-      drive('f');pause(1000);
-      c_p++;                
-    }
-    else if(isintersection && c_p==5) {
+      if(isobject()==true){
+        pause(1000);
+        lcd_display('o');
+        drive('f');
+        pause(1000);
+        pickup=5-c_p;
+      }        
+      else{
+        drive('f');pause(1000);
+        }
+      c_p++;                      
+   }
+    else if(isintersection && c_p==4) {
       ledflag=true;
-      if(isobject()==true){lcd_display('o');pause(2000);}
-        //pickup=1;
-      slowdownflag=false;
-      drive('f');pause(500);
-      drive('r');pause(1000);
+      if(isobject()==true){
+        pause(1000);
+        lcd_display('o');
+        drive('f');pause(1000);
+        pickup=1;
+      }
+      else {
+        drive('f');pause(500);
+        drive('r');pause(1000);
+      }     
       c_p++;       
     }
-    else if(isintersection && c_p==6){   //cross the center course
+    else if(isintersection && c_p==5){   //cross the center course
       drive('f');pause(1000);
+      slowdownflag=false;
       localfinish=true;
     }
   }
@@ -316,8 +350,7 @@ int main()
       if(isobject()==true){
         drive('s');pause(100);
         dropoff=1;
-        break;
-        
+        break;  
       }
     }
     else if(isintersection && isobject()==true){
@@ -335,6 +368,6 @@ int main()
     }      
   }
 
-  pd_distance=40*(pickup+dropoff);
+  pd_distance=40*(pickup+dropoff+2);
   lcd_display('e');
-}     
+}
