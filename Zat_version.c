@@ -14,6 +14,7 @@ int c_intersection=0;
 bool slowdownflag = false;
 int pickup, dropoff;
 int ob_distance=20;
+int obj_distance=10;
 int pd_distance;
 
 static volatile int distance;
@@ -139,7 +140,7 @@ void led_blink(void *ledPin) {
 
 // Function for checking for object to be picked up
 bool isobject() {
-  if(distance2<ob_distance) {
+  if(distance2<obj_distance) {
     return true;} 
   else {
     return false;}
@@ -213,7 +214,7 @@ void avoid_obstacle(){
         drive('l');pause(1000); // Turn left
         if(isobstacle()==true) {
           drive('l');pause(500);
-          avoid_obstacle();
+          c_itsc=0;
         }
         else {
             ob_flag=true;
@@ -238,7 +239,7 @@ int main()
       ledflag=true;
       c_intersection++;
       //lcd_display('i');
-      if(isobstacle()==true) {
+      if(c_intersection<5 && isobstacle()==true) {
         drive('f');pause(500);
         drive('l');pause(1000);
         avoid_obstacle();
@@ -262,40 +263,25 @@ int main()
   bool isintersection=false;
   while(!localfinish) {
     isintersection=!linefollowing();
-    while(isobstacle() == true) {
+    while(c_p !=0 && isobstacle() == true) {
       high(led2);
       drive('s');
     }
     low(led2);      
     if(isintersection && c_p==0) {
       ledflag=true;
+      drive('f');pause(500);
+      drive('r');pause(1000); 
       if(isobject()==true){
+        drive('s');
         pause(1000);
         lcd_display('o');
-        drive('f');pause(1000);
-        pickup=5;
-      }
-      else{
-      drive('f');pause(500);
-      drive('r');pause(1000);
-      }      
+        drive('f');pause(100);
+        pickup=5;}
+          
       c_p++;
       slowdownflag=true;
-    }
-    /*else if(isintersection && c_p==1) {
-      ledflag=true;
-      if(isobstacle()==true){
-        pause(1000);
-        lcd_display('o');
-        drive('f');pause(1000);
-      }
-      else {
-      drive('f');pause(500);
-      drive('r');pause(1000);
-      c_p++;
-      slowdownflag=true;
-    }
-  }*/   
+    } 
     else if(isintersection && c_p>=1 && c_p<4) {
       ledflag=true;
       if(isobject()==true){
@@ -318,30 +304,28 @@ int main()
         drive('f');pause(1000);
         pickup=1;
       }
-      else {
-        drive('f');pause(500);
-        drive('r');pause(1000);
-      }     
+      drive('f');pause(500);
+      drive('r');pause(1000);
+      slowdownflag=false;     
       c_p++;       
     }
     else if(isintersection && c_p==5){   //cross the center course
       drive('f');pause(1000);
-      slowdownflag=false;
       localfinish=true;
     }
   }
 
   // 3 go through and stop at drop point
-  int c_d=1;
+  int c_d=0;
   localfinish=false;
   while(!localfinish){
     isintersection=!linefollowing();
-    while(isobstacle() == true) {
+    while(c_d != 0 && isobstacle() == true) {
       high(led2);
       drive('s');
     }
     low(led2);      
-    if(isintersection && c_d==1){
+    if(isintersection && c_d==0){
       ledflag=true;
       drive('f');pause(500);
       drive('r');pause(1000);
@@ -357,8 +341,10 @@ int main()
       ledflag=true;
       // arrived drop point
       if(isobject()==true){
-        drive('s');break;
+        drive('s');
+        c_d++;
         dropoff=c_d;
+        break;
       }
     }
     else if(isintersection){
@@ -368,6 +354,11 @@ int main()
     }      
   }
 
-  pd_distance=40*(pickup+dropoff+2);
+  pd_distance=40*(pickup+dropoff);
   lcd_display('e');
+  /*dprint(lcd, "Pickup: %d", pickup);
+  pause(2000);
+  writeChar(lcd, CLR);
+  dprint(lcd, "Dropoff: %d", dropoff);
+  pause(2000);*/
 }
