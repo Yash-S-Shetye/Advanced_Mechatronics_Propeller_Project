@@ -7,6 +7,7 @@
 
 int white = 0;
 int black = 1;
+const int BO  = 17;
 const int ON  = 22;
 const int CLR = 12;
 const int CRT = 13;
@@ -57,6 +58,7 @@ void init() {
   led=9;
   ledflag=false;
   lcd = serial_open(12, 12, 0, 9600);
+  writeChar(lcd, BO);
   writeChar(lcd, ON);
   writeChar(lcd, CLR);
   pause(5);
