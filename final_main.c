@@ -2,48 +2,59 @@
 
 #include "simpletools.h"                      // Include simple tools
 #include "servo.h"                            // Include servo library
-#include "ping.h"  
-#include "stdbool.h"                           
+#include "ping.h"                             // Include ping sensor library
+#include "stdbool.h"                          // Include library for using boolean variables
 
+// Initializing values for black and white areas
 int white = 0;
 int black = 1;
-const int BO  = 17;
+
+// Initializing parameters for lcd display
+const int BO = 17;
 const int ON  = 22;
 const int CLR = 12;
 const int CRT = 13;
-int c_intersection=0;
-bool slowdownflag = false;
-int pickup, dropoff;
-int ob_distance=20;
-int obj_distance=10;
-int pd_distance;
 
-static volatile int distance;
+int c_intersection=0;
+bool slowdownflag = false; // Flag for slowing down bot in lanes
+int pickup, dropoff; // Keeping track of pickup and dropoff locations
+int ob_distance=10; // Safe distance from obstacles for detection
+int obj_distance=20; // Distance from detected object
+int pd_distance; // Variable for storing total distance frompickup to dropoff point
+
+static volatile int distance; // Variable for storing distance from obstacle on cog1
+
+// Initializing pin values for second ultrasonic sensor
 const int trigPin = 1;
 const int echoPin = 2;
+
+// Variables being changed on different cogs
 static volatile long duration;
 static volatile int distance2;
 static volatile int led;
 static volatile bool ledflag;
 
 // Global vars for cogs to share
-unsigned int stack[40 + 25]; // Stack vars for cog1`
-unsigned int stack1[40 + 25]; // Stack vars for cog2
-unsigned int stack2[40 + 25]; // Stack vars for cog3`
+unsigned int stack[40 + 25]; // Stack vars for cog1`for obstacle detection ping sensor
+unsigned int stack1[40 + 25]; // Stack vars for cog2 for led indicating intersections encountered
+unsigned int stack2[40 + 25]; // Stack vars for cog3`for object detecting ultrasonic sensor
 
 
-serial *lcd;
+serial *lcd; // Creating object for lcd
 
 bool finish = false;
 bool localfinish = false;
+
+// Initializing variables for servos, IR sensor and obstacle detecting led
 const int leftWheel=16;
 const int rightWheel=17;
 const int ultrasonic=11;
-const int TxPin = 12;
 const int IR_ML=4;
 const int IR_MR=8;
 const int led2=7;
 
+
+// Declaring functions being used
 void avoid_obstacle();
 void obstacle(void *dist);
 void object(void *dist2);
@@ -54,6 +65,7 @@ bool linefollowing();
 void test();
 void init();
 
+// Defining initializing function
 void init() {
   led=9;
   ledflag=false;
@@ -85,7 +97,7 @@ void drive(char i) {
   }
 }
 
-//run this method continuesly to follow the line until the robot meets an intersection
+// Defining line following function
 bool linefollowing(){
   int SL = input(IR_ML);
   int SR = input(IR_MR);
@@ -107,6 +119,7 @@ bool linefollowing(){
   }
 }
 
+// Defining function for measuring distance from obstacle
 void obstacle(void *dist) {
   while(1) {
     distance = ping_cm(ultrasonic); // Get cm distance from Ping)))
@@ -114,6 +127,7 @@ void obstacle(void *dist) {
    }
 }
 
+// Defining function for measuring distance from object
 void object(void *dist2) {
   while(1) {
     low(trigPin);
@@ -127,7 +141,7 @@ void object(void *dist2) {
   }
 }
 
-// function for blinking led
+// Defining function for blinking led when bot encounters intersection
 void led_blink(void *ledPin) {
   while(1) {
     if(ledflag==true) {
@@ -148,6 +162,7 @@ bool isobject() {
     return false;}
 }
 
+// Function for checking for static as well as dynamic obstacles
 bool isobstacle() {
   if (distance<ob_distance){
     return true;}
@@ -163,24 +178,24 @@ void lcd_display(char disp) {
                pause(1000);
                writeChar(lcd, CLR);
                break;
-      case 'p':dprint(lcd, "Object Placed");
+      case 'e':dprint(lcd, "Object Placed");
+               pause(2000);
+               writeChar(lcd, CLR);
+               dprint(lcd, "Distance=%d cm",pd_distance);
                pause(2000);
                writeChar(lcd, CLR);
                break;
-      case 'd':dprint(lcd, "Distance=%d cm",pd_distance);
+      /*case 'd':dprint(lcd, "Distance=%d cm",pd_distance);
                pause(2000);
                writeChar(lcd, CLR);
-               break;
+               break;*/
       default:dprint(lcd, "Error");
               writeChar(lcd, CLR);
               break;
     }       
 }
 
-//for test purpose
-void test(){
-}
-
+// Defining function for avoiding obstacles
 void avoid_obstacle(){
   int c_itsc=0;
   bool isintersection;
@@ -210,7 +225,7 @@ void avoid_obstacle(){
       ledflag=true;
       c_intersection++;
       if(c_intersection==5) {
-        drive('f');pause(1000);
+        drive('f');pause(1000); // Move straight
         ob_flag=true;
         localfinish=true;
       }
@@ -229,30 +244,30 @@ void avoid_obstacle(){
     }    
 }
 
-
+// Main function
 int main()
 {
   init();
   cogstart(&obstacle, NULL, stack, sizeof(stack));      // Starting cog for detecting obstacles
-  cogstart(&object, NULL, stack1, sizeof(stack1));
-  cogstart(&led_blink, NULL, stack2, sizeof(stack2));
+  cogstart(&object, NULL, stack1, sizeof(stack1));      // Starting cog for blinking led
+  cogstart(&led_blink, NULL, stack2, sizeof(stack2));   // Starting cog for detecting objects
 
   // 1 go through the center course
   localfinish=false;
   while(!localfinish){
-    if(!linefollowing()){     //if meet intersection
+    if(!linefollowing()){     //if meets intersection
       ledflag=true;
       c_intersection++;
       //lcd_display('i');
-      if(c_intersection<5 && isobstacle()==true) {
+      if(c_intersection<5 && isobstacle()==true) { // If detects obstacle
         drive('f');pause(500);
         drive('l');pause(1000);
         avoid_obstacle();
       }
       else { 
-        if(c_intersection==5) {
+        if(c_intersection==5) { // If reaches last intersection
           drive('f');pause(500);
-          drive('r');pause(1000);
+          drive('r');pause(1000); // Turn right
           localfinish=true;
         }
         else{
@@ -311,11 +326,11 @@ int main()
         drive('s');
         pause(1000);
         lcd_display('o');
-        drive('f');pause(1000);
+        //drive('f');pause(1000);
         pickup=1;
       }
       slowdownflag=false; 
-      drive('f');pause(500);
+      //drive('f');pause(500);
       drive('r');pause(1000);    
       c_p++;       
     }
@@ -367,6 +382,6 @@ int main()
 
   pd_distance=40*(pickup+dropoff);
   pause(1000);
-  lcd_display('p');
-  lcd_display('d');
+  lcd_display('e');
+  //lcd_display('d');
 }
