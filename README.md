@@ -1,2 +1,2 @@
-# Advanced_Mechatronics_Propeller_Project
-Repository for storing all codes related to Propeller project
+# Autonomous Guided Vehicle Robot
+Code files for Autonomous Guided Vehicle Robot using Propeller Board.
